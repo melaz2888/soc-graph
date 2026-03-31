@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "soc-graph"
+version = "0.1.0"
+description = "Provenance-graph anomaly detection pipeline for SOC investigations."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "networkx>=3.3,<4",
+  "pydantic>=2.8,<3",
+]
+
+[project.optional-dependencies]
+ml = [
+  "torch>=2.4,<3",
+  "torch-geometric>=2.6,<3",
+]
+app = [
+  "fastapi>=0.115,<1",
+  "uvicorn>=0.30,<1",
+  "streamlit>=1.38,<2",
+]
+dev = [
+  "pytest>=8.3,<9",
+  "pytest-cov>=5,<6",
+  "ruff>=0.6,<1",
+]
+# Install all optional groups at once: pip install -e ".[all]"
+all = [
+  "torch>=2.4,<3",
+  "torch-geometric>=2.6,<3",
+  "fastapi>=0.115,<1",
+  "uvicorn>=0.30,<1",
+  "streamlit>=1.38,<2",
+  "pytest>=8.3,<9",
+  "pytest-cov>=5,<6",
+  "ruff>=0.6,<1",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

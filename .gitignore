@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+*.pyc
+*.pt
+*.pth
+artifacts/
+data/raw/*
+data/processed/*
+data/ground_truth/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/ground_truth/.gitkeep
