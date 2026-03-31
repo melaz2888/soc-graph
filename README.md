@@ -14,64 +14,75 @@ The first implementation milestone is the ML pipeline:
 
 The LLM layer is intentionally deferred. When added later, it will explain suspicious subgraphs after the detector has already made the structural decision.
 
-## Current status
+## Recommended data path
+
+The intended v1 workflow is the PIDSMaker PostgreSQL route, not raw CDM parsing.
+
+1. Download the pre-processed PIDSMaker dump
+
+- Repository: [PIDSMaker](https://github.com/ubc-provenance/PIDSMaker)
+- Download `cadets_e3.dump` from the Google Drive link in their docs/README.
+
+2. Load it into PostgreSQL
+
+```powershell
+createdb cadets_e3
+pg_restore -U postgres -h localhost -p 5432 -d cadets_e3 cadets_e3.dump
+```
+
+3. Export the provenance graph to the CSV format used by this project
+
+```powershell
+.venv\Scripts\python.exe -m pip install -e .[pg]
+.venv\Scripts\python.exe scripts\export_pidsmaker_pg.py --dsn "postgresql://postgres:yourpassword@localhost:5432/cadets_e3" --out data/processed/cadets_e3.csv
+```
+
+4. Run the detection pipeline
+
+```powershell
+.venv\Scripts\python.exe scripts\run_baseline_experiment.py data/processed/cadets_e3.csv
+.venv\Scripts\python.exe scripts\run_gnn_experiment.py data/processed/cadets_e3.csv --epochs 30
+```
+
+Notes:
+
+- The real CADETS E3 PIDSMaker dump restores into `event_table`, `subject_node_table`, `file_node_table`, and `netflow_node_table`.
+- The exporter now auto-detects that real schema; you do not need raw CDM parsing.
+- On this machine, Windows policy blocks some native Python execution paths, so the validated fallback is Docker:
+
+```powershell
+docker run --name soc-graph-pg17 -e POSTGRES_PASSWORD=postgres -p 54330:5432 -d postgres:17
+docker cp C:\Users\moham\Downloads\cadets_e3.dump soc-graph-pg17:/tmp/cadets_e3.dump
+docker exec soc-graph-pg17 createdb -U postgres cadets_e3
+docker exec soc-graph-pg17 pg_restore -U postgres -d cadets_e3 /tmp/cadets_e3.dump
+docker run --rm -v "${PWD}:/workspace" -w /workspace python:3.11-slim sh -lc "python -m pip install -e '.[pg]' && python scripts/export_pidsmaker_pg.py --dsn 'postgresql://postgres:postgres@host.docker.internal:54330/cadets_e3' --out data/processed/cadets_e3_sample.csv --limit 100000"
+docker run --rm -v "${PWD}:/workspace" -w /workspace python:3.11-slim sh -lc "python -m pip install -e . && python scripts/run_baseline_experiment.py data/processed/cadets_e3_sample.csv"
+docker run --rm -v "${PWD}:/workspace" -w /workspace python:3.11-slim sh -lc "python -m pip install -e '.[ml]' && python scripts/run_gnn_experiment.py data/processed/cadets_e3_sample.csv --epochs 5"
+```
 
 See [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for the live milestone tracker and next steps.
 
+## Current status
+
 Implemented so far:
 
-- CSV-based PIDSMaker ingestion
+- PIDSMaker CSV ingestion and PostgreSQL export path
 - normalized provenance event records
 - aggregated time-windowed graph snapshots
 - graph tensor-like artifacts with node and edge features from the project spec
 - learned benign-behavior anomaly scoring over provenance edge patterns
-- a real GNN code path scaffold with PyTorch Geometric modules and lazy runtime checks
-- experiment runner with train/calibrate/detect flow
-- train/save and reload/infer scripts for the learned detector artifact
-- thresholding, candidate subgraph extraction, and alert serialization
-- training and evaluation helpers for window-level experiments
+- a real GNN code path scaffold with PyTorch Geometric modules and runtime checks
+- experiment runners for both the baseline detector and the GNN path
+- thresholding, candidate subgraph extraction, alert serialization, and rule-based MITRE mapping
+- training/evaluation helpers, FastAPI wiring, Streamlit wiring, and demo notebooks
+- validated CADETS E3 restore from the real PIDSMaker PostgreSQL dump
+- validated PostgreSQL -> CSV export on a CADETS E3 sample slice
+- validated both baseline and GNN runs on that exported CADETS E3 sample slice via Docker
 
 Environment note:
 
-- Native `numpy/pandas` imports are blocked on this machine by application control policy.
-- The active implementation therefore stays stdlib-first for now so the pipeline remains runnable.
-- Parquet ingestion is deferred until an allowed dataframe/parquet engine is available.
-- The PyTorch DLL backend is also blocked by application policy in the current environment, so the GNN modules are implemented in the repo but cannot be executed on this machine yet.
-
-## Baseline experiment
-
-You can run the current baseline pipeline on a PIDSMaker-style CSV export:
-
-```powershell
-.venv\Scripts\python.exe scripts\run_baseline_experiment.py tests\fixtures\sample_pidsmaker.csv --window-minutes 15 --benign-ratio 0.5 --threshold-k 1.0
-```
-
-This currently:
-
-- loads tabular provenance events
-- builds time-windowed graph snapshots
-- calibrates a threshold on early benign windows
-- learns which edge signatures and counts are normal in benign provenance windows
-- scores later windows for anomalous aggregated edges
-- emits structured alert payloads ready for later report generation
-
-## Trained artifact workflow
-
-Train and save the detector:
-
-```powershell
-.venv\Scripts\python.exe scripts\train_behavioral_model.py tests\fixtures\sample_pidsmaker.csv --output-model artifacts\models\behavioral_detector.json --output-summary artifacts\models\behavioral_detector_summary.json --window-minutes 15 --benign-ratio 0.5 --threshold-k 1.0
-```
-
-Run saved-model inference:
-
-```powershell
-.venv\Scripts\python.exe scripts\run_saved_model_inference.py tests\fixtures\sample_pidsmaker.csv artifacts\models\behavioral_detector.json --threshold 3.4657359027997265 --window-minutes 15
-```
-
-Notebook demo:
-
-- [notebooks/01_behavioral_detector_demo.ipynb](notebooks/01_behavioral_detector_demo.ipynb) loads the saved model artifact and presents the current results without retraining inside the notebook.
+- This machine has application-control constraints around some native Python libraries.
+- The repository still supports the intended PostgreSQL export path and GNN code path, but successful execution on this machine currently works most reliably through Docker rather than the local Windows Python runtime.
 
 ## Local environment
 
@@ -83,6 +94,8 @@ Planned install flow:
 C:\Users\moham\AppData\Local\Programs\Python\Python311\python.exe -m venv .venv
 .venv\Scripts\python.exe -m pip install -U pip
 .venv\Scripts\python.exe -m pip install -e .[dev]
+.venv\Scripts\python.exe -m pip install -e .[pg]
+.venv\Scripts\python.exe -m pip install -e .[ml]
 ```
 
 ## Layout

@@ -18,6 +18,9 @@ ml = [
   "torch>=2.4,<3",
   "torch-geometric>=2.6,<3",
 ]
+pg = [
+  "psycopg2-binary>=2.9,<3",
+]
 app = [
   "fastapi>=0.115,<1",
   "uvicorn>=0.30,<1",
@@ -32,6 +35,7 @@ dev = [
 all = [
   "torch>=2.4,<3",
   "torch-geometric>=2.6,<3",
+  "psycopg2-binary>=2.9,<3",
   "fastapi>=0.115,<1",
   "uvicorn>=0.30,<1",
   "streamlit>=1.38,<2",

@@ -10,7 +10,7 @@ This file is the live project memory for implementation status, current constrai
 
 ## Executive decisions
 
-- Data source direction: PIDSMaker-oriented ingestion
+- Data source direction: PIDSMaker PostgreSQL dump -> CSV export
 - Reporting: placeholder only for now
 - First milestone: ML pipeline first
 
@@ -56,6 +56,15 @@ Build the first runnable research slice from PIDSMaker-style tabular events to s
 - Added a real GNN code path scaffold with PyTorch Geometric encoder, decoder, data conversion, and training entry point
 - Installed the ML stack required for the GNN code path
 - Verified that the GNN runtime is blocked on this machine by application control policy rather than missing code
+- Added a concrete PIDSMaker PostgreSQL export path aligned with the intended CADETS E3 workflow
+- Restored the real `cadets_e3.dump` PIDSMaker dataset into PostgreSQL through Docker
+- Inspected the real CADETS E3 schema and confirmed it uses `event_table`, `subject_node_table`, `file_node_table`, and `netflow_node_table`
+- Adapted the exporter to auto-detect and stream from the real split PIDSMaker schema
+- Removed the exporter's full-materialization bottleneck and switched it to streaming CSV output
+- Exported a real CADETS E3 sample slice to `data/processed/cadets_e3_sample.csv`
+- Verified the baseline pipeline on the exported CADETS E3 sample slice
+- Verified the GNN pipeline on the exported CADETS E3 sample slice in Docker
+- Added and executed a CADETS E3 sample results notebook with real plots, GNN loss history, alert summaries, MITRE mapping, and explicit LLM status
 
 ## In progress
 
@@ -70,25 +79,27 @@ Build the first runnable research slice from PIDSMaker-style tabular events to s
 - No FastAPI endpoints beyond placeholders
 - No Streamlit dashboard beyond placeholders
 - No DARPA or PIDSMaker dataset downloaded locally yet
-- No PyTorch Geometric training run yet
-- No executable GNN training run yet on this machine because the torch DLL backend is blocked by application policy
+- No full `data/processed/cadets_e3.csv` export yet
+- No full-dataset baseline or GNN run over all 36M+ CADETS E3 events yet
+- No native Windows PyTorch Geometric run yet on this machine because the local Python runtime is blocked by application policy
 - No raw DARPA CDM parser yet
 - No parquet ingestion in the active environment because native dataframe engines are blocked by application policy
-- No notebook-based training flow by design; the notebook is inference/demo only and uses a pre-trained artifact
+- No live Ollama or OpenAI provider configured in this environment yet
+- No full-scale streaming/windowed training path yet for CADETS E3 at its true size
 
 ## Next steps
 
-1. Add a concrete experiment script or notebook that loads a sample PIDSMaker export and reports graph statistics by window.
-2. Get the GNN backend running in an environment where the torch DLLs are allowed to load.
-3. Execute the first real GNN training run and save a checkpoint artifact.
+1. Optimize the CADETS E3 export/training path so it can handle the full 36M+ event dataset rather than only a sample slice.
+2. Add explicit chunked or streaming dataset/window builders instead of loading the full normalized CSV into memory.
+3. Execute the first full-scale GNN training run on CADETS E3 and save a checkpoint artifact.
 4. Expand dataset handling for benign-only train windows and labeled evaluation windows.
 5. Add attack-subgraph reduction logic beyond simple flagged-edge collection.
 6. Strengthen the notebook with richer provenance inspection once the detector is more mature.
-7. Revisit parquet ingestion once an allowed engine is available in the environment.
-8. Keep the LLM layer deferred until the graph detection path is meaningfully stronger.
+7. Keep the LLM layer deferred until the graph detection path is meaningfully stronger.
 
 ## Notes for future turns
 
 - Keep emphasizing the GNN and provenance-graph theory in docs and code comments.
 - Preserve a clean separation between detection logic and later report generation.
 - When the LLM layer is added, make it consume structured alert artifacts rather than raw logs.
+- Treat Docker as the current execution environment of record on this machine until the local Python policy issue is resolved.

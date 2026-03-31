@@ -89,6 +89,7 @@ class GNNExperimentResult:
     """Result of a full GNN training + inference run."""
     epochs: int
     final_loss: float
+    loss_history: list[float]
     learned_threshold: float
     checkpoint_path: str
     graph_stats: dict[str, float]
@@ -163,6 +164,7 @@ def run_gnn_experiment(
     return GNNExperimentResult(
         epochs=training_summary.epochs,
         final_loss=training_summary.final_loss,
+        loss_history=training_summary.loss_history,
         learned_threshold=threshold,
         checkpoint_path=training_summary.checkpoint_path,
         graph_stats=summarize_graph_windows(snapshot_dataset),

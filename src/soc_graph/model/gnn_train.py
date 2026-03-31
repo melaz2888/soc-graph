@@ -21,6 +21,7 @@ class GNNTrainingConfig:
 class GNNTrainingSummary:
     epochs: int
     final_loss: float
+    loss_history: list[float]
     checkpoint_path: str
     learned_threshold: float
 
@@ -58,9 +59,11 @@ def train_gnn_detector(
     pyg_windows = artifact_batch_to_pyg(artifacts)
 
     final_loss = 0.0
+    loss_history: list[float] = []
 
     for epoch in range(training_config.epochs):
         memory: dict = {}   # reset memory at the start of each epoch
+        epoch_losses: list[float] = []
 
         for data in pyg_windows:
             optimizer.zero_grad()
@@ -93,9 +96,14 @@ def train_gnn_detector(
             loss.backward()
             optimizer.step()
             final_loss = float(loss.detach().cpu().item())
+            epoch_losses.append(final_loss)
 
         # Detach memory at epoch boundary to avoid accumulating graph history
         memory = {k: v.detach() for k, v in memory.items()}
+        if epoch_losses:
+            loss_history.append(sum(epoch_losses) / len(epoch_losses))
+        else:
+            loss_history.append(final_loss)
 
     # ------------------------------------------------------------------
     # Threshold calibration: score every training window once more with
@@ -137,6 +145,8 @@ def train_gnn_detector(
             },
             "training_config": training_config.__dict__,
             "learned_threshold": learned_threshold,
+            "loss_history": loss_history,
+            "final_loss": final_loss,
         },
         checkpoint_path,
     )
@@ -144,6 +154,7 @@ def train_gnn_detector(
     return GNNTrainingSummary(
         epochs=training_config.epochs,
         final_loss=final_loss,
+        loss_history=loss_history,
         checkpoint_path=str(checkpoint_path),
         learned_threshold=learned_threshold,
     )
