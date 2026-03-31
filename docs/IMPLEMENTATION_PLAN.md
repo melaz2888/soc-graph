@@ -65,6 +65,7 @@ Build the first runnable research slice from PIDSMaker-style tabular events to s
 - Verified the baseline pipeline on the exported CADETS E3 sample slice
 - Verified the GNN pipeline on the exported CADETS E3 sample slice in Docker
 - Added and executed a CADETS E3 sample results notebook with real plots, GNN loss history, alert summaries, MITRE mapping, and explicit LLM status
+- Verified Ollama integration with `qwen2.5:7b` on the host machine and re-executed the CADETS E3 results notebook with a live LLM-generated report
 
 ## In progress
 
@@ -84,8 +85,8 @@ Build the first runnable research slice from PIDSMaker-style tabular events to s
 - No native Windows PyTorch Geometric run yet on this machine because the local Python runtime is blocked by application policy
 - No raw DARPA CDM parser yet
 - No parquet ingestion in the active environment because native dataframe engines are blocked by application policy
-- No live Ollama or OpenAI provider configured in this environment yet
 - No full-scale streaming/windowed training path yet for CADETS E3 at its true size
+- No API/dashboard path exercised with the live Ollama integration yet
 
 ## Next steps
 
@@ -95,7 +96,8 @@ Build the first runnable research slice from PIDSMaker-style tabular events to s
 4. Expand dataset handling for benign-only train windows and labeled evaluation windows.
 5. Add attack-subgraph reduction logic beyond simple flagged-edge collection.
 6. Strengthen the notebook with richer provenance inspection once the detector is more mature.
-7. Keep the LLM layer deferred until the graph detection path is meaningfully stronger.
+7. Tune the Ollama prompt and alert payload size so local report quality is stronger and more grounded in the graph evidence.
+8. Keep the LLM explanatory role separate from the detector decision path.
 
 ## Notes for future turns
 

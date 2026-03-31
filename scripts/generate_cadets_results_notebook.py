@@ -296,6 +296,7 @@ code(
     """llm_cfg = config_from_env()
 print("LLM configured:" , bool(llm_cfg))
 if llm_cfg:
+    llm_cfg.timeout = max(llm_cfg.timeout, 600)
     print(f"Provider: {llm_cfg.provider}")
     print(f"Model: {llm_cfg.model}")
 else:
@@ -322,11 +323,10 @@ What we can concretely do so far:
 - run a baseline structural anomaly detector
 - run the first GNN path on a real CADETS-derived sample slice
 - serialize suspicious subgraphs and map them to MITRE ATT&CK hints
-- generate a placeholder analyst report
+- generate an analyst report through Ollama when configured, otherwise fall back to a deterministic placeholder
 
 What is not set up yet:
 
-- no live Ollama or OpenAI-backed LLM session in this environment
 - no full-dataset CADETS E3 run over all 36M+ events yet
 - no polished evaluation benchmark yet
 """
