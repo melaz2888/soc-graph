@@ -1,0 +1,8 @@
+event_id,timestamp,edge_type,src_id,src_type,src_name,dst_id,dst_type,dst_name
+evt-1,2026-01-01T12:00:00Z,WRITE,proc-1,PROCESS,/bin/bash,file-1,FILE,/tmp/out
+evt-2,2026-01-01T12:01:00Z,WRITE,proc-1,PROCESS,/bin/bash,file-1,FILE,/tmp/out
+evt-3,2026-01-01T12:16:00Z,CONNECT,proc-1,PROCESS,/bin/bash,sock-1,SOCKET,10.0.0.1:443
+evt-4,2026-01-01T12:17:00Z,CONNECT,proc-1,PROCESS,/bin/bash,sock-1,SOCKET,10.0.0.1:443
+evt-5,2026-01-01T12:18:00Z,CONNECT,proc-1,PROCESS,/bin/bash,sock-1,SOCKET,10.0.0.1:443
+evt-6,2026-01-01T12:19:00Z,CONNECT,proc-1,PROCESS,/bin/bash,sock-1,SOCKET,10.0.0.1:443
+
